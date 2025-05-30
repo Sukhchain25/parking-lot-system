@@ -1,33 +1,32 @@
-// src/auth/auth.service.ts
-import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
-import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/modules/users/users.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UserService,
-    private jwtService: JwtService,
+    private readonly usersService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    if (user && (await bcrypt.compare(pass, user.password))) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...result } = user;
-      return result;
+    if (!user) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
-    return null;
-  }
-
-  async login(user: any) {
-    const payload = { email: user.email, sub: user._id, role: user.role };
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Login successful',
-      access_token: this.jwtService.sign(payload),
-    };
+    const passwordValid = await bcrypt.compare(password, user.password);
+    if (!passwordValid) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+    // return user data without password
+    const { password: _, ...result } = user;
+    return result;
   }
 
   async register(userDto: any) {
@@ -44,6 +43,16 @@ export class AuthService {
     return {
       statusCode: HttpStatus.CREATED,
       message: 'User registered successfully',
+    };
+  }
+
+  async login(loginDto: { email: string; password: string }) {
+    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const payload = { email: user.email, sub: user._id, role: user.role };
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Login successful',
+      access_token: this.jwtService.sign(payload),
     };
   }
 }
