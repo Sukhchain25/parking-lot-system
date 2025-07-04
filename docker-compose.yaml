@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:5
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  parking-app:
+    build: .
+    container_name: parking-lot
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "80:3000"
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo_data:

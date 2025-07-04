@@ -14,7 +14,7 @@ import { ParkingLotService } from './parking-lot.service';
 import { CreateParkingLotDto } from './dto/create-parking-lot.dto';
 import { UpdateParkingLotDto } from './dto/update-parking-lot.dto';
 import { PaginationParamsDto } from './dto/pagination-params.dto';
-import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Parking Lots')
 @Controller('parking-lots')
